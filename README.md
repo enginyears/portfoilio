@@ -68,7 +68,8 @@ Open `projects.csv` in Excel, Google Sheets, or any spreadsheet app. Each row is
 | `views` | Approximate views | `5800` |
 | `comments` | Approximate comments | `24` |
 | `instagram` | Direct reel URL | `https://instagram.com/reel/XXXXX/` |
-| `youtube` | YouTube Shorts / video URL | `https://youtube.com/shorts/XXXXX` |
+| `youtube` | YouTube Shorts URL | `https://youtube.com/shorts/XXXXX` |
+| `yt_video` | Full YouTube video URL | `https://youtube.com/watch?v=XXXXX` |
 | `github` | Specific repo URL for this project | `https://github.com/you/repo` |
 | `components` | Pipe-separated hardware/software | `Raspberry Pi\|React\|CORS Proxy` |
 | `notes` | Optional extra note shown in italic | `Part of a longer series` |
@@ -157,6 +158,8 @@ On the page itself, the search bar and tag filters mean visitors never need to s
 To change the accent colour, find `--accent: #00e5a0;` in the `:root` CSS block in `index.html` and replace it with any hex value. Every button, glow, badge, and border scales from that single variable.
 
 To add a new filter tag, simply include it in any project's `tags` cell in the CSV. The filter bar generates itself from whatever tags exist in the data — there's no separate list to maintain.
+
+The filter bar has a **collapse toggle** — tap the "Tags" button to hide or show it. When collapsed, if a filter other than "All" is active, a small label shows the active tag so the user always knows the grid is filtered. This is useful on mobile where vertical space is limited.
 
 To pin a project at the top regardless of date, set `featured` to `true`. The featured card spans the full width of the grid and is always rendered before all others.
 
