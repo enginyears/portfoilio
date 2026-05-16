@@ -10,7 +10,7 @@
   <meta property="og:title" content="enginyears" />
   <meta property="og:description" content="Electronics • DIY • Maker Projects" />
   <meta property="og:image" content="" /><!-- Put your og-image URL here -->
-  <meta property="og:url" content="https://enginyears.github.io" />
+  <meta property="og:url" content="https://yourusername.github.io" />
   <meta name="twitter:card" content="summary_large_image" />
 
   <!-- ─── GoatCounter Analytics ────────────────────────────────────────── -->
@@ -69,48 +69,38 @@
 
     body {
       font-family: var(--body);
-      background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
       position: relative;
-    }
-
-    /* ─── Circuit Board SVG Background ───────────────────────────────── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
+      /*
+        All backgrounds merged onto body itself — fixes the iOS Safari
+        position:fixed pseudo-element expansion bug on mobile.
+        background-attachment:local means the grid scrolls with the page
+        naturally instead of detaching from the viewport.
+      */
+      background-color: var(--bg);
       background-image:
-        /* Horizontal traces */
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 39px,
-          rgba(0, 229, 160, 0.03) 39px,
-          rgba(0, 229, 160, 0.03) 40px
-        ),
-        /* Vertical traces */
+        /* Radial vignette — fades edges to dark */
+        radial-gradient(ellipse 100% 50% at 50% 0%, transparent 30%, rgba(6,10,13,0.85) 100%),
+        /* Vertical PCB traces */
         repeating-linear-gradient(
           90deg,
           transparent,
           transparent 39px,
-          rgba(0, 180, 216, 0.025) 39px,
-          rgba(0, 180, 216, 0.025) 40px
+          rgba(0, 180, 216, 0.03) 39px,
+          rgba(0, 180, 216, 0.03) 40px
+        ),
+        /* Horizontal PCB traces */
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 39px,
+          rgba(0, 229, 160, 0.035) 39px,
+          rgba(0, 229, 160, 0.035) 40px
         );
-      background-size: 40px 40px;
-    }
-
-    /* Vignette overlay */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, transparent 0%, rgba(6,10,13,0.7) 100%);
+      background-size: cover, 40px 40px, 40px 40px;
+      background-attachment: scroll, local, local;
     }
 
     /* Scan line effect */
@@ -374,12 +364,59 @@
     .search-input::placeholder { color: var(--dim); }
     .search-input:focus { border-color: var(--accent); }
 
+    /* ─── Filter Toggle ───────────────────────────────────────────────── */
+    .filter-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .filter-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: all 0.2s;
+    }
+    .filter-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-toggle-btn svg {
+      width: 12px; height: 12px;
+      transition: transform 0.3s ease;
+    }
+    .filter-toggle-btn.open svg { transform: rotate(180deg); }
+
+    .filter-active-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      display: none;
+    }
+    .filter-active-label.visible { display: block; }
+
     /* ─── Filter Tabs ─────────────────────────────────────────────────── */
     .filter-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 28px;
+      overflow: hidden;
+      max-height: 200px;
+      transition: max-height 0.35s ease, opacity 0.25s ease, margin-bottom 0.3s ease;
+      opacity: 1;
+    }
+    .filter-row.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin-bottom: 0;
     }
     .filter-btn {
       padding: 6px 14px;
@@ -487,6 +524,12 @@
       font-size: 11px;
       color: rgba(255,255,255,0.7);
     }
+    .thumb-stat svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      opacity: 0.8;
+    }
 
     /* Badges on thumbnail */
     .card-badges {
@@ -589,12 +632,16 @@
       color: var(--dim);
     }
 
-    /* Action buttons */
+    /* Action buttons — 4-column grid (Reel / Shorts / Video / Code) */
     .card-actions {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       padding: 0 18px 18px;
+    }
+    @media (max-width: 480px) {
+      /* 2×2 grid on small phones */
+      .card-actions { grid-template-columns: repeat(2, 1fr); }
     }
     .action-btn {
       display: flex;
@@ -742,6 +789,14 @@
       </div>
     </div>
 
+    <div class="filter-controls reveal">
+      <button class="filter-toggle-btn open" id="filter-toggle-btn" onclick="toggleFilters()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+        Tags
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <span class="filter-active-label" id="filter-active-label"></span>
+    </div>
     <div class="filter-row reveal" id="filter-row"></div>
     <div class="projects-grid" id="projects-grid"></div>
 
@@ -854,9 +909,27 @@
     }
 
     /* ── Utility helpers ─────────────────────────────────────────────────── */
-    const isNew = date => (Date.now() - new Date(date)) < 30 * 24 * 60 * 60 * 1000;
-    const fmt   = n    => n >= 1000 ? (n / 1000).toFixed(1) + "k" : n;
-    const fmtDate = d  => new Date(d).toLocaleDateString("en-IN", { year:"numeric", month:"short", day:"numeric" });
+
+    /*
+      parseDate: Safari on iOS doesn't reliably parse "YYYY-MM-DD" strings
+      via new Date() — it can return "Invalid Date" or shift the day due to
+      UTC vs local time interpretation. Parsing manually using local time
+      components fixes this across all browsers and devices.
+    */
+    function parseDate(str) {
+      if (!str) return new Date(0);
+      const parts = str.split('-').map(Number);
+      if (parts.length !== 3 || parts.some(isNaN)) return new Date(0);
+      return new Date(parts[0], parts[1] - 1, parts[2]); // local time, no UTC offset
+    }
+
+    const isNew    = date => (Date.now() - parseDate(date)) < 30 * 24 * 60 * 60 * 1000;
+    const fmt      = n    => n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n);
+    const fmtDate  = d    => {
+      const dt = parseDate(d);
+      if (isNaN(dt.getTime())) return "—";
+      return dt.toLocaleDateString("en-IN", { year:"numeric", month:"short", day:"numeric" });
+    };
 
     function showToast(msg) {
       const t = document.getElementById("toast");
@@ -869,6 +942,7 @@
     const ICONS = {
       instagram: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>`,
       youtube:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><polygon points="10 15 15 12 10 9"/></svg>`,
+      yt_video:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="m10 8 5 3-5 3z"/><path d="M8 21h8M12 17v4"/></svg>`,
       github:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>`,
       reel:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>`,
       heart:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
@@ -942,23 +1016,44 @@
     }
 
     /* ── Render Filters ────────────────────────────────────────────────────── */
-    let activeFilter = "All";
+    let activeFilter  = "All";
+    let filtersOpen   = true;
+
     function renderFilters() {
       document.getElementById("filter-row").innerHTML = allTags().map(tag => `
         <button class="filter-btn ${tag === activeFilter ? "active" : ""}"
-                onclick="setFilter('${tag}')">${tag}</button>`).join("");
+                onclick="setFilter('${tag.replace(/'/g, "&#39;")}')">${tag}</button>`).join("");
     }
+
     function setFilter(tag) {
       activeFilter = tag;
       renderFilters();
       renderCards();
+      setTimeout(initReveal, 50);   // ← was missing: cards rendered opacity:0 and never became visible
+
+      // Update the "active filter" label shown when filters are collapsed
+      const label = document.getElementById("filter-active-label");
+      if (tag !== "All") {
+        label.textContent = "→ " + tag;
+        label.classList.add("visible");
+      } else {
+        label.classList.remove("visible");
+      }
+    }
+
+    function toggleFilters() {
+      filtersOpen = !filtersOpen;
+      const row = document.getElementById("filter-row");
+      const btn = document.getElementById("filter-toggle-btn");
+      row.classList.toggle("collapsed", !filtersOpen);
+      btn.classList.toggle("open", filtersOpen);
     }
 
     /* ── Render Cards ────────────────────────────────────────────────────── */
     function renderCards() {
       const query = document.getElementById("search-input").value.toLowerCase().trim();
 
-      let list = [...PROJECTS].sort((a,b) => new Date(b.date) - new Date(a.date));
+      let list = [...PROJECTS].sort((a,b) => parseDate(b.date) - parseDate(a.date));
 
       if (activeFilter !== "All") {
         list = list.filter(p => p.tags.includes(activeFilter));
@@ -1036,9 +1131,10 @@
               <div class="card-date">Published ${fmtDate(date)}</div>
             </div>
             <div class="card-actions">
-              ${actionBtn(links?.instagram, ICONS.reel,      "Reel",   "insta", "instagram")}
-              ${actionBtn(links?.youtube,   ICONS.youtube,   "Shorts", "yt",    "youtube")}
-              ${actionBtn(links?.github,    ICONS.github,    "Code",   "gh",    "github")}
+              ${actionBtn(links?.instagram, ICONS.reel,     "Reel",   "insta", "instagram")}
+              ${actionBtn(links?.youtube,   ICONS.youtube,  "Short",  "yt",    "youtube")}
+              ${actionBtn(links?.yt_video,  ICONS.yt_video, "Video",  "yt",    "yt_video")}
+              ${actionBtn(links?.github,    ICONS.github,   "Code",   "gh",    "github")}
             </div>
           </div>
         </div>`;
@@ -1096,7 +1192,8 @@
                   },
                   links: {
                     instagram: row.instagram || "",
-                    youtube:   row.youtube   || "",
+                    youtube:   row.youtube   || "",   // YouTube Shorts
+                    yt_video:  row.yt_video  || "",   // Full YouTube video
                     github:    row.github    || "",
                   },
                 })));
